@@ -13,3 +13,5 @@ class Video(db.Model):
     author = db.Column(db.Text)
     summary = db.Column(db.Text)
     key_points = db.relationship('KeyPoint', back_populates='video')
+    transcript_chunks = db.relationship('TranscriptChunk', back_populates='video')
+    
