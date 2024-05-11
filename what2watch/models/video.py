@@ -15,3 +15,19 @@ class Video(db.Model):
     key_points = db.relationship('KeyPoint', back_populates='video')
     transcript_chunks = db.relationship('TranscriptChunk', back_populates='video')
     
+    def as_dict(self) -> dict:
+        return {
+            'id': self._id,
+            'title': self.title,
+            'description': self.description,
+            'view_count': self.view_count,
+            'thumbnail_url': self.thumbnail_url,
+            'publish_date': self.publish_date,
+            'length': self.length,
+            'author': self.author,
+            'url': self.url
+        }
+    
+    @property
+    def url(self) -> str:
+        return f'https://www.youtube.com/watch?v={self._id}'
