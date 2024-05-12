@@ -1,14 +1,23 @@
 from what2watch.extensions import db
-from what2watch.models import Video, TranscriptChunk
+from what2watch.models import Video
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable, RegexMatchError
-
+from flask import abort
 from langchain.text_splitter import TokenTextSplitter
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
-from langchain_core.documents import Document
 from what2watch.langchain_related.prompts.video_summary import question_prompt, refine_prompt
+from what2watch.use_cases.transcript import get_transcripts_as_langchain_documents
 
+
+VIDEO_LENGTH_LIMIT = 15 * 60
+
+def video_is_valid_or_400(video: Video):
+    if video_is_too_long(video):
+        abort(400, description='Video is too long!\nwhat2watch works best with videos under 15 minutes longs.')
+
+def video_is_too_long(video: Video) -> bool:
+    return video.length > VIDEO_LENGTH_LIMIT
 
 
 def get_video_from_db_or_api_and_save_or_404(video_id: str) -> Video:
@@ -60,10 +69,3 @@ def generate_video_summary(video_id: str) -> str:
         initial_response_name='existing_answer'
     )
     return summarize_chain.run(chunks)
-
-
-def get_transcripts_as_langchain_documents(video_id: str) -> list[Document]:
-    document = Document(metadata={'video_id': video_id}, page_content='')
-    for transcript_chunk in TranscriptChunk.query.filter_by(video_id=video_id).all():
-        document.page_content += transcript_chunk.text
-    return [document]

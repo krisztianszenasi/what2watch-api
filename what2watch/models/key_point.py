@@ -9,3 +9,10 @@ class KeyPoint(db.Model):
     video = db.relationship('Video', back_populates='key_points')
     starts_from_id = db.Column(db.Integer, db.ForeignKey('transcript_chunk.id'), nullable=True)
     starts_from = db.relationship('TranscriptChunk')
+
+    def as_dict(self) -> dict:
+        return {
+            'id:': self._id,
+            'text': self.text,
+            'url': self.starts_from.url if self.starts_from else None,
+        }
