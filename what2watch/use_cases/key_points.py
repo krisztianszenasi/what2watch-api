@@ -30,6 +30,7 @@ def generate_video_key_points(video_id: str) -> List[KeyPoint]:
             video_id=video_id,
             text=key_point_text.strip(),
             starts_from=matching_transcript,
+            starting_words=starting_words,
         ))
         previous_transcript_chunk = matching_transcript
     return key_points

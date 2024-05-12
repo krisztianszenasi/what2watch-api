@@ -9,6 +9,7 @@ class KeyPoint(db.Model):
     video = db.relationship('Video', back_populates='key_points')
     starts_from_id = db.Column(db.Integer, db.ForeignKey('transcript_chunk.id'), nullable=True)
     starts_from = db.relationship('TranscriptChunk')
+    starting_words = db.Column(db.Text)
 
     def as_dict(self) -> dict:
         return {
