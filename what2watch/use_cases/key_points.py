@@ -4,7 +4,7 @@ from what2watch.use_cases.transcript import get_transcripts_as_langchain_documen
 from what2watch.langchain_related.prompts.key_points import key_point_question_prompt, key_point_refine_prompt
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import TokenTextSplitter
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from typing import List
 from difflib import SequenceMatcher
 
