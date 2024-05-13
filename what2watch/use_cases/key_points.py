@@ -6,7 +6,7 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import TokenTextSplitter
 from langchain_community.chat_models import ChatOpenAI
 from typing import List
-from difflib import SequenceMatcher
+from difflib import SequenceMatcher, Match
 
 
 def generate_video_key_points(video_id: str) -> List[KeyPoint]:
@@ -22,9 +22,8 @@ def generate_video_key_points(video_id: str) -> List[KeyPoint]:
 
         starting_words, key_point_text = line.split(':')
         matching_transcript = find_matching_transcript(
-            video_id,
             starting_words.strip(),
-            search_after=previous_transcript_chunk
+            transcripts=TranscriptChunk.query.filter_by(video_id=video_id).all(),
         )
         key_points.append(KeyPoint(
             video_id=video_id,
@@ -54,22 +53,51 @@ def generate_video_key_points_text(video_id: str) -> str:
 
 
 def find_matching_transcript(
-    video_id: str,
     starting_words: str,
-    search_after: TranscriptChunk,
+    transcripts: List[TranscriptChunk]
 ) -> TranscriptChunk:
-    query = TranscriptChunk.query.filter_by(video_id=video_id)
-    if search_after is not None:
-        query = query.filter(TranscriptChunk._id > search_after._id)
-    transcript: TranscriptChunk
     previous_transcript: TranscriptChunk
-    previous_match_len = 0
-    for transcript in query:
+    previous_match: Match = None
+    for transcript in transcripts:
         current_match = SequenceMatcher(None, starting_words, transcript.text).find_longest_match()
-        if previous_match_len + current_match.size >= len(starting_words) - 1:
-            if previous_match_len == 0:
+        if complete_match_found(current_match, previous_match, starting_words):
+            if complete_match_in(current_match, starting_words):
                 return transcript
-            return previous_transcript
-        previous_match_len = current_match.size
+            elif match_splitted_at_word_break(current_match, previous_match, previous_transcript.text):
+                return previous_transcript
+        previous_match = current_match
         previous_transcript = transcript
     return None
+
+
+def complete_match_found(match_a: Match, match_b: Match, words: str) -> bool:
+    return get_len(match_a) + get_len(match_b) >= len(words) - 1
+
+
+def complete_match_in(match_obj: Match, words: str) -> bool:
+    return get_len(match_obj) == len(words)
+
+
+def match_splitted_at_word_break(current: Match, previous: Match, words: str) -> bool:
+    return match_starts_at_beginning(current) and match_stops_at_end(previous, words)
+
+
+def match_starts_at_beginning(match_obj: Match) -> bool:
+    try:
+        return match_obj.b == 0
+    except AttributeError:
+        return False
+
+
+def match_stops_at_end(match_obj: Match, words: str) -> bool:
+    try:
+        return match_obj.b + match_obj.size == len(words)
+    except AttributeError:
+        return False
+
+
+def get_len(match_obj: Match) -> int:
+    try:
+        return match_obj.size
+    except AttributeError:
+        return 0
