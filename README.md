@@ -47,7 +47,7 @@ flask db upgrade
 flask run
 ```
 
-## Running tests
+## Running Tests
 
 The project uses the [Flask-Testing](https://pythonhosted.org/Flask-Testing/) package.
 
@@ -56,3 +56,12 @@ To run tests execute the following command:
 ```
 python -m unittest
 ```
+
+## Used Technologies / Packages
+
+* [Flask](https://flask.palletsprojects.com/en)
+* [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/en)
+* [Flask-Migrate](https://flask-migrate.readthedocs.io/en/latest/)
+* [Langchain](https://www.langchain.com/)
+* [OpenAI](https://platform.openai.com/docs/api-reference)
+  
