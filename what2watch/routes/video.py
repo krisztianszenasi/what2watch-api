@@ -5,28 +5,28 @@ from what2watch.models.video import Video
 from what2watch.use_cases.transcript import (
     retrieve_and_save_transcripts_to_db, retrieve_paginated_transcript_chunks,
     transcripts_exist_in_db_for)
-from what2watch.use_cases.video import generate_video_summary, get_video_from_db_or_api_and_save_or_404, video_is_too_long, video_is_valid_or_400
+from what2watch.use_cases.video import generate_video_summary, get_video_from_db_or_api_and_save_or_404, video_is_valid_or_400
 from what2watch.use_cases.key_points import generate_video_key_points
 
-transcript = Blueprint('transcript', __name__)
+video = Blueprint('video', __name__)
 
 
-@transcript.errorhandler(400)
+@video.errorhandler(400)
 def bad_request(error):
     return jsonify({'error': 'Bad Request', 'message': error.description}), 400
 
-@transcript.errorhandler(404)
+@video.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not Found', 'message': error.description}), 404
 
 
-@transcript.route('/video/<video_id>')
+@video.route('/video/<video_id>')
 def get_video(video_id: str):
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     return {'result': video.as_dict()}
 
 
-@transcript.route('/video/<video_id>/transcript_chunks')
+@video.route('/video/<video_id>/transcript_chunks')
 def get_transcript_chunks(video_id: str):
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
 
@@ -44,7 +44,7 @@ def get_transcript_chunks(video_id: str):
     }
 
 
-@transcript.route('/video/<video_id>/summary')
+@video.route('/video/<video_id>/summary')
 def get_summary(video_id: str):
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     video_is_valid_or_400(video)
@@ -56,7 +56,7 @@ def get_summary(video_id: str):
     return {'result': video.summary}
 
 
-@transcript.route('/video/<video_id>/key-points')
+@video.route('/video/<video_id>/key-points')
 def get_key_points(video_id: str):
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     video_is_valid_or_400(video)

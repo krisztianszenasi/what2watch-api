@@ -1,8 +1,10 @@
+from importlib import metadata
 from what2watch.extensions import db
 from what2watch.models import TranscriptChunk, Video
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 from langchain_core.documents import Document
 from flask import abort
+from typing import List
 
 
 def transcripts_exist_in_db_for(video_id: str) -> bool:
@@ -24,12 +26,24 @@ def retrieve_and_save_transcripts_to_db(video: Video):
     db.session.commit()
 
 
-def retrieve_paginated_transcript_chunks(video_id: str, page: int, page_size: int) -> list[TranscriptChunk]:
+def retrieve_paginated_transcript_chunks(video_id: str, page: int, page_size: int) -> List[TranscriptChunk]:
     return TranscriptChunk.query.filter_by(video_id=video_id).paginate(page=page, per_page=page_size)
 
 
 def get_transcripts_as_langchain_documents(video_id: str) -> list[Document]:
-    document = Document(metadata={'video_id': video_id}, page_content='')
-    for transcript_chunk in TranscriptChunk.query.filter_by(video_id=video_id).all():
-        document.page_content += transcript_chunk.text
-    return [document]
+    return parse_transcripts_to_langchain_documents(TranscriptChunk.query.filter_by(video_id=video_id))
+
+
+def parse_transcripts_to_langchain_documents(transcripts: List[TranscriptChunk]) -> List[Document]:
+    page_content=' '.join([transcript.text for transcript in transcripts])
+    if page_content != '':
+        return [Document(metadata=get_metadata_from(transcripts), page_content=page_content)]
+    return []
+
+    
+def get_metadata_from(transcripts: List[TranscriptChunk]) -> dict:
+    try:
+        video_id = transcripts[0].video_id
+    except (IndexError, AttributeError):
+        video_id = None
+    return {'video_id': video_id}

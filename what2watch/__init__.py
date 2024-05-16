@@ -2,7 +2,7 @@ from flask import Flask
 
 from what2watch.extensions import db, migrate
 from dotenv import load_dotenv
-from what2watch.routes.transcript import transcript
+from what2watch.routes.video import video
 
 
 def create_app(config='what2watch.config.default'):
@@ -14,6 +14,6 @@ def create_app(config='what2watch.config.default'):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    app.register_blueprint(transcript)
+    app.register_blueprint(video)
 
     return app

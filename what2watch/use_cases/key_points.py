@@ -1,72 +1,84 @@
 from what2watch.models.key_point import KeyPoint
 from what2watch.models.transcript import TranscriptChunk
 from what2watch.use_cases.transcript import get_transcripts_as_langchain_documents
-from what2watch.langchain_related.prompts.key_points import key_point_question_prompt, key_point_refine_prompt
-from langchain.chains.summarize import load_summarize_chain
-from langchain.text_splitter import TokenTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.chat_models import ChatOpenAI
-from typing import List
+from typing import List, Dict, Optional
 from difflib import SequenceMatcher, Match
+from what2watch.langchain_related.prompts.key_points import key_points_prompt
+from what2watch.langchain_related.parsers.key_points import response_parser
 
 
 def generate_video_key_points(video_id: str) -> List[KeyPoint]:
-    key_points_text: str = generate_video_key_points_text(video_id)
-    key_points_lines: List[str] = key_points_text.split('\n')
-
-    previous_transcript_chunk: TranscriptChunk = None
+    key_points_response: List[Dict] = get_key_points_prompt_response(video_id)
     key_points: List[KeyPoint] = []
 
-    for line in key_points_lines:
-        if line == '' or ':' not in line:
-            continue
+    previous_transcript_chunk: TranscriptChunk = None
+    for key_point in key_points_response:
+        starting_words = key_point.get('starting_words')
+        text = key_point.get('text')
 
-        starting_words, key_point_text = line.split(':')
-        matching_transcript = find_matching_transcript(
-            starting_words.strip(),
-            transcripts=TranscriptChunk.query.filter_by(video_id=video_id).all(),
+        matching_transcript = find_matching_transcript_for(
+            starting_words=starting_words,
+            video_id=video_id,
+            start_searching_from=previous_transcript_chunk,
         )
+
         key_points.append(KeyPoint(
             video_id=video_id,
-            text=key_point_text.strip(),
-            starts_from=matching_transcript,
+            text=text,
+            starts_from=matching_transcript or previous_transcript_chunk,
             starting_words=starting_words,
         ))
-        previous_transcript_chunk = matching_transcript
+        previous_transcript_chunk = matching_transcript or previous_transcript_chunk
     return key_points
 
 
 
-def generate_video_key_points_text(video_id: str) -> str:
+def get_key_points_prompt_response(video_id: str) -> List[Dict]:
     transcript = get_transcripts_as_langchain_documents(video_id)
-    splitter = TokenTextSplitter(model_name='gpt-3.5-turbo', chunk_size=100000, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=8500, chunk_overlap=0)
     chunks = splitter.split_documents(transcript)
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
-    summarize_chain = load_summarize_chain(
-        llm=llm,
-        chain_type='refine',
-        question_prompt=key_point_question_prompt,
-        refine_prompt=key_point_refine_prompt,
-        document_variable_name='text', 
-        initial_response_name='existing_answer'
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    chain = key_points_prompt | llm | response_parser
+
+    key_points: List[Dict] = []
+    for chunk in chunks:
+        current_response: Dict = chain.invoke(chunk)
+        key_points.extend(current_response.get('key_points', []))
+    return key_points
+
+
+def find_matching_transcript_for(
+        starting_words:
+        str, video_id: str,
+        start_searching_from: Optional[TranscriptChunk] = None,
+    ) -> TranscriptChunk:
+    transcript_query = TranscriptChunk.query.filter_by(video_id=video_id)
+    if start_searching_from is not None:
+        transcript_query = transcript_query.filter(TranscriptChunk._id > start_searching_from._id)
+
+    return find_matching_transcript(
+        starting_words=starting_words,
+        transcripts=transcript_query,
     )
-    return summarize_chain.run(chunks)
 
 
 def find_matching_transcript(
     starting_words: str,
-    transcripts: List[TranscriptChunk]
+    transcripts: List[TranscriptChunk],
 ) -> TranscriptChunk:
-    previous_transcript: TranscriptChunk
+    previous_transcript: TranscriptChunk = None
     previous_match: Match = None
-    for transcript in transcripts:
-        current_match = SequenceMatcher(None, starting_words, transcript.text).find_longest_match()
+    for current_transcript in transcripts:
+        current_match = SequenceMatcher(None, starting_words.lower(), current_transcript.text.lower()).find_longest_match()
         if complete_match_found(current_match, previous_match, starting_words):
             if complete_match_in(current_match, starting_words):
-                return transcript
-            elif match_splitted_at_word_break(current_match, previous_match, previous_transcript.text):
+                return current_transcript
+            elif match_splitted_at_word_break(current_match, previous_match, previous_transcript):
                 return previous_transcript
         previous_match = current_match
-        previous_transcript = transcript
+        previous_transcript = current_transcript
     return None
 
 
@@ -78,8 +90,10 @@ def complete_match_in(match_obj: Match, words: str) -> bool:
     return get_len(match_obj) == len(words)
 
 
-def match_splitted_at_word_break(current: Match, previous: Match, words: str) -> bool:
-    return match_starts_at_beginning(current) and match_stops_at_end(previous, words)
+def match_splitted_at_word_break(current: Match, previous: Match, transcript: Optional[TranscriptChunk]) -> bool:
+    if transcript is None:
+        return False
+    return match_starts_at_beginning(current) and match_stops_at_end(previous, transcript.text)
 
 
 def match_starts_at_beginning(match_obj: Match) -> bool:

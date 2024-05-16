@@ -1,7 +1,63 @@
+from cgitb import text
 from unittest import TestCase
 
 from what2watch.models.transcript import TranscriptChunk
 from what2watch.use_cases.key_points import find_matching_transcript
+from dataclasses import dataclass
+from typing import List
+from functools import cached_property
+
+
+@dataclass(kw_only=True)
+class RealWorldExample:
+
+    starting_words: str
+    transcripts_texts: List[str]
+    expected_idx: int = 0
+
+    @cached_property
+    def transcripts(self) -> List[TranscriptChunk]:
+        return [
+            TranscriptChunk(text=text)
+            for text in self.transcripts_texts
+        ]
+    
+    @property
+    def expected(self) -> TranscriptChunk:
+        return self.transcripts[self.expected_idx]
+    
+
+
+real_world_examples: List[RealWorldExample] = [
+    RealWorldExample(
+        starting_words='I bet you think this is nothing but a cute little 12-in notebook',
+        transcripts_texts=[
+            'I bet you think this is nothing but a',
+            'cute little 12-in notebook but there\'s',
+        ]
+    ),
+    RealWorldExample(
+        starting_words='Looking at it',
+        transcripts_texts=[
+            'carry looking at it it\'s hard to believe',
+            'that the HP Spectre fold packs a 12',
+        ]
+    ),
+    RealWorldExample(
+        starting_words='This thing should be',
+        transcripts_texts=[
+            'get to a half charge this thing should',
+            'be a productivity monster especially if'
+        ]
+    ),
+    RealWorldExample(
+        starting_words='HP Spectre fold has',
+        transcripts_texts=[
+            
+        ]
+    )
+]
+
 
 
 class FindMatchingTranscriptTestCase(TestCase):
@@ -87,3 +143,10 @@ class FindMatchingTranscriptTestCase(TestCase):
             find_matching_transcript(starting_words, transcripts),
             None,
         )
+
+    def test_real_world_examples(self):
+        for example in real_world_examples:
+            self.assertEqual(
+                example.expected,
+                find_matching_transcript(example.starting_words, example.transcripts)
+            )
