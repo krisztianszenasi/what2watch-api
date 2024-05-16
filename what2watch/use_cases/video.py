@@ -4,7 +4,7 @@ from pytube import YouTube
 from pytube.exceptions import VideoUnavailable, RegexMatchError
 from flask import abort
 from langchain.text_splitter import TokenTextSplitter
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
 from what2watch.langchain_related.prompts.video_summary import question_prompt, refine_prompt
 from what2watch.use_cases.transcript import get_transcripts_as_langchain_documents
@@ -72,4 +72,5 @@ def generate_video_summary(video_id: str) -> str:
         document_variable_name='text', 
         initial_response_name='existing_answer'
     )
-    return summarize_chain.run(chunks)
+    result = summarize_chain.invoke(chunks)
+    return result.get('output_text', '')

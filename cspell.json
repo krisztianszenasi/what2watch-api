@@ -10,7 +10,8 @@
         "langchain",
         "pytube",
         "pydantic",
-        "jsonify"
+        "jsonify",
+        "openai"
     ],
     // flagWords - list of words to be always considered incorrect
     "flagWords": [

@@ -2,7 +2,7 @@ from what2watch.models.key_point import KeyPoint
 from what2watch.models.transcript import TranscriptChunk
 from what2watch.use_cases.transcript import get_transcripts_as_langchain_documents
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from typing import List, Dict, Optional
 from difflib import SequenceMatcher, Match
 from what2watch.langchain_related.prompts.key_points import key_points_prompt
