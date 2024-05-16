@@ -1,5 +1,10 @@
-from langchain.prompts import PromptTemplate
+"""Video summary related prompts.
 
+These prompts are modified variants of the default ones provided by `langchain`
+for their `RefineDocumentsChain` chain.
+"""
+
+from langchain.prompts import PromptTemplate
 
 refine_prompt = PromptTemplate.from_template(
     """

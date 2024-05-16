@@ -2,6 +2,7 @@ from what2watch.extensions import db
 
 
 class Video(db.Model):
+    """Video model representation for permanent storage."""
 
     _id = db.Column('id', db.String(14), primary_key=True)
     title = db.Column(db.Text)
@@ -16,6 +17,7 @@ class Video(db.Model):
     transcript_chunks = db.relationship('TranscriptChunk', back_populates='video')
     
     def as_dict(self) -> dict:
+        """Convert model to dictionary representation."""
         return {
             'id': self._id,
             'title': self.title,

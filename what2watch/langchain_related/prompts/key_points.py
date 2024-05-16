@@ -1,6 +1,8 @@
-from langchain.prompts import PromptTemplate
-from what2watch.langchain_related.parsers.key_points import response_parser
+"""Key point related prompts."""
 
+from langchain.prompts import PromptTemplate
+
+from what2watch.langchain_related.parsers.key_points import response_parser
 
 template = """\
 You will be given a text. Your job is to collect the important key points from

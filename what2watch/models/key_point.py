@@ -2,6 +2,7 @@ from what2watch.extensions import db
 
 
 class KeyPoint(db.Model):
+    """KeyPoint model representation for permanent storage."""
 
     _id = db.Column('id', db.Integer, primary_key=True)
     video_id = db.Column(db.String(14), db.ForeignKey('video.id'))
@@ -12,6 +13,7 @@ class KeyPoint(db.Model):
     starting_words = db.Column(db.Text)
 
     def as_dict(self) -> dict:
+        """Convert model to dictionary representation."""
         return {
             'id:': self._id,
             'text': self.text,

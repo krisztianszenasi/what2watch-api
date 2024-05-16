@@ -13,21 +13,36 @@ video = Blueprint('video', __name__)
 
 @video.errorhandler(400)
 def bad_request(error):
+    """Custom bad request response."""
     return jsonify({'error': 'Bad Request', 'message': error.description}), 400
 
 @video.errorhandler(404)
 def not_found(error):
+    """Custom not found response."""
     return jsonify({'error': 'Not Found', 'message': error.description}), 404
 
 
 @video.route('/video/<video_id>')
 def get_video(video_id: str):
+    """Displays some basic information about a youtube video.
+
+    404 error when the video does not exist.
+    """
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     return {'result': video.as_dict()}
 
 
 @video.route('/video/<video_id>/transcript_chunks')
 def get_transcript_chunks(video_id: str):
+    """Displays a paginated response for available transcript chunks.
+
+    Currently only english transcription is supported.
+    If it does not exists returns 400 bad request.
+
+    Available query parameters:
+        page (int): Page index. Defaults to 1.
+        size(int): Page size. Default to 50.
+    """
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
 
     if not transcripts_exist_in_db_for(video_id):
@@ -46,6 +61,14 @@ def get_transcript_chunks(video_id: str):
 
 @video.route('/video/<video_id>/summary')
 def get_summary(video_id: str):
+    """Displays a summary generated via an llm from the video's transcript.
+    
+    If the video is longer than the specified max length the endpoint returns
+    400 bad request.
+
+    It can be modified via an environmental variable `VIDEO_LENGTH_LIMIT` and
+    it defaults to 15 minutes. If you would like no limits set it to -1.
+    """
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     video_is_valid_or_400(video)
     if not transcripts_exist_in_db_for(video_id):
@@ -58,6 +81,10 @@ def get_summary(video_id: str):
 
 @video.route('/video/<video_id>/key-points')
 def get_key_points(video_id: str):
+    """Displays a key points generated via an llm from the video's transcript.
+    
+    Same rules are applied here like at the `get_summary` endpoint.
+    """
     video: Video = get_video_from_db_or_api_and_save_or_404(video_id)
     video_is_valid_or_400(video)
     if not transcripts_exist_in_db_for(video_id):

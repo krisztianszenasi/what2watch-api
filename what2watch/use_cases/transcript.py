@@ -12,6 +12,14 @@ def transcripts_exist_in_db_for(video_id: str) -> bool:
 
 
 def retrieve_and_save_transcripts_to_db(video: Video):
+    """Retrieve transcripts from the api and save them to the db.
+
+    If the given video does not have english transcripts a 400 bad request is
+    raised.
+
+    Args:
+        video (Video): Video to get transcripts for.
+    """
     try:
         transcript_chunks = YouTubeTranscriptApi.get_transcript(video._id)
     except TranscriptsDisabled:
@@ -35,6 +43,7 @@ def get_transcripts_as_langchain_documents(video_id: str) -> list[Document]:
 
 
 def parse_transcripts_to_langchain_documents(transcripts: List[TranscriptChunk]) -> List[Document]:
+    """Parse the TranscriptChunk objects into langchain Documents."""
     page_content=' '.join([transcript.text for transcript in transcripts])
     if page_content != '':
         return [Document(metadata=get_metadata_from(transcripts), page_content=page_content)]

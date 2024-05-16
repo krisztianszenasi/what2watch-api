@@ -8,15 +8,19 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
 from what2watch.langchain_related.prompts.video_summary import question_prompt, refine_prompt
 from what2watch.use_cases.transcript import get_transcripts_as_langchain_documents
+import os
 
 
-VIDEO_LENGTH_LIMIT = 15 * 60
+VIDEO_LENGTH_LIMIT = os.environ.get('VIDEO_LENGTH_LIMIT', 15 * 60)
 
 def video_is_valid_or_400(video: Video):
+    """Checks if the video is valid. If not raises a 400 bad request."""
     if video_is_too_long(video):
         abort(400, description='Video is too long!\nwhat2watch works best with videos under 15 minutes longs.')
 
 def video_is_too_long(video: Video) -> bool:
+    if VIDEO_LENGTH_LIMIT == -1:
+        return False
     return video.length > VIDEO_LENGTH_LIMIT
 
 
