@@ -2,7 +2,7 @@
 
 **what2watch** is `REST-api`  written in **python**  that I made as an
 assignment for my [prompt engineering](https://portal.vik.bme.hu/kepzes/targyak/VITMAV82/hu/)
-class at [budapest institute of economy and engineering](https://www.bme.hu/).
+class at [Budapest University of Technology and Economics](https://www.bme.hu/).
 
 ## Installation and First Steps
 
