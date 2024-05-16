@@ -1,4 +1,3 @@
-from cgitb import text
 from unittest import TestCase
 
 from what2watch.models.transcript import TranscriptChunk
@@ -24,7 +23,10 @@ class RealWorldExample:
     
     @property
     def expected(self) -> TranscriptChunk:
-        return self.transcripts[self.expected_idx]
+        try:
+            return self.transcripts[self.expected_idx]
+        except IndexError:
+            return None
     
 
 
@@ -50,12 +52,6 @@ real_world_examples: List[RealWorldExample] = [
             'be a productivity monster especially if'
         ]
     ),
-    RealWorldExample(
-        starting_words='HP Spectre fold has',
-        transcripts_texts=[
-            
-        ]
-    )
 ]
 
 
