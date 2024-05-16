@@ -1,8 +1,8 @@
 # what2watch
 
 **what2watch** is `REST-api`  written in **python**  that I made as an
-assignment for my [promptenginerring](https://portal.vik.bme.hu/kepzes/targyak/VITMAV82/hu/)
-class at [budapest institue of economy and engineering](https://www.bme.hu/).
+assignment for my [prompt engineering](https://portal.vik.bme.hu/kepzes/targyak/VITMAV82/hu/)
+class at [budapest institute of economy and engineering](https://www.bme.hu/).
 
 ## Installation and First Steps
 
@@ -12,7 +12,7 @@ class at [budapest institue of economy and engineering](https://www.bme.hu/).
 pip install -r requirements.txt
 ```
 
-> I recommend using a **python virtual enviroment** for example [pyenv](https://github.com/pyenv/pyenv)
+> I recommend using a **python virtual environment** for example [pyenv](https://github.com/pyenv/pyenv)
 
 
 ### 2. Set the environmental variables
@@ -30,14 +30,12 @@ requests. It defaults to 15 minutes. Use `-1` if you want no limits.
 The reason for the limit is the prevent requesting **summaries** and **key points** for
 longer videos which can result in wasting a lot of **tokens**.
 
-### 3. Initialize the database
+### 3. Upgrade the database
 
 The project uses [Flask-SQLAlchemy](https://pypi.org/project/Flask-SQLAlchemy/) for
 storing objects permanently in a **sqlite** database with [Flask-Migrate](https://flask-migrate.readthedocs.io/en/latest/).
 
 ```
-flask db init
-flask db migarte -m "initial"
 flask db upgrade
 ```
 
