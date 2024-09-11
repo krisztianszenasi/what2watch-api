@@ -4,6 +4,9 @@
 assignment for my [prompt engineering](https://portal.vik.bme.hu/kepzes/targyak/VITMAV82/hu/)
 class at [Budapest University of Technology and Economics](https://www.bme.hu/).
 
+It allows for summarizing YouTube videos with English transcripts and collecting
+important key points along with timestamped URLs.
+
 ## Installation and First Steps
 
 ### 1. Simply clone the git repository then install the **requirements** via **pip**.
